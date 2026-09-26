@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Tone Player</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #eee;
+    }
+    .card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 320px;
+    }
+    h1 {
+      margin: 0 0 1.5rem 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .field {
+      margin-bottom: 1.25rem;
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      font-size: 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+    }
+    input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+    }
+    .hint {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: #888;
+    }
+    .hint kbd {
+      background: rgba(255,255,255,0.15);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Simple Tone Player</h1>
+    <div class="field">
+      <label for="freq">Frequency (Hz)</label>
+      <input type="number" id="freq" value="440" min="20" max="20000" step="1">
+    </div>
+    <div class="field">
+      <label for="amp">Amplitude (0 – 1)</label>
+      <input type="number" id="amp" value="0.3" min="0" max="1" step="0.05">
+    </div>
+    <p class="hint">Press <kbd>Space</kbd> to play · Release to stop</p>
+  </div>
+
+  <script>
+    let audioCtx = null;
+    let osc = null;
+    let gainNode = null;
+
+    function getCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function startTone() {
+      const freq = parseFloat(document.getElementById('freq').value) || 440;
+      const amp = parseFloat(document.getElementById('amp').value);
+      const volume = Math.max(0, Math.min(1, amp));
+
+      const ctx = getCtx();
+      if (osc) {
+        osc.stop();
+        osc.disconnect();
+      }
+
+      osc = ctx.createOscillator();
+      gainNode = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gainNode.gain.value = volume;
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      osc.start();
+    }
+
+    function stopTone() {
+      if (osc) {
+        try { osc.stop(); } catch (_) {}
+        osc = null;
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        startTone();
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        stopTone();
+      }
+    });
+  </script>
+</body>
+</html>
